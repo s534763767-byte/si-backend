@@ -6,36 +6,49 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Reemplaza con tu Access Token real de Mercado Pago
+// Configurar Mercado Pago con el Access Token de las variables de entorno de Render
 mercadopago.configure({
-  access_token: 'APP_USR-239340105453094-101312-6a617eb8e374c75aea46294299540336-3762642196'
+  access_token: process.env.ACCESS_TOKEN
 });
 
+// Ruta de prueba para verificar que el servidor responde
+app.get('/', (req, res) => {
+  res.send('Backend de SI! funcionando correctamente');
+});
+
+// Ruta para crear la preferencia de pago (con soporte para comisiones / split payment)
 app.post('/create_preference', async (req, res) => {
   try {
-    const { items, marketplace_fee, notification_url } = req.body;
+    const { title, unit_price, quantity, marketplace_fee } = req.body;
 
     let preference = {
-      items: items,
-      marketplace_fee: marketplace_fee ? Number(marketplace_fee) : 0,
+      items: [
+        {
+          title: title || 'Producto de SI!',
+          unit_price: Number(unit_price),
+          quantity: Number(quantity) || 1,
+        }
+      ],
+      // Comisión de la plataforma para esquemas de marketplace / split payment
+      marketplace_fee: marketplace_fee ? Number(marketplace_fee) : undefined,
       back_urls: {
-        success: "https://www.google.com",
-        failure: "https://www.google.com",
-        pending: "https://www.google.com"
+        success: "https://www.success.com",
+        failure: "https://www.failure.com",
+        pending: "https://www.pending.com"
       },
       auto_return: "approved",
     };
 
-    if (notification_url) {
-      preference.notification_url = notification_url;
-    }
-
     const response = await mercadopago.preferences.create(preference);
     
-    res.json({ init_point: response.body.init_point });
+    res.status(200).json({
+      id: response.body.id,
+      init_point: response.body.init_point,
+      sandbox_init_point: response.body.sandbox_init_point
+    });
   } catch (error) {
-    console.error("Error al crear preferencia:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Error al crear la preferencia de pago:", error);
+    res.status(500).json({ error: error.message || "Error al procesar el pago" });
   }
 });
 
