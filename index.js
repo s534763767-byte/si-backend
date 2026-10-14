@@ -6,17 +6,17 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Configurar Mercado Pago con el Access Token de las variables de entorno de Render
+// Configurar Mercado Pago con el Access Token
 mercadopago.configure({
   access_token: process.env.ACCESS_TOKEN
 });
 
-// Ruta de prueba para verificar que el servidor responde
+// Ruta de prueba
 app.get('/', (req, res) => {
   res.send('Backend de SI! funcionando correctamente');
 });
 
-// Ruta para crear la preferencia de pago (con soporte para comisiones / split payment)
+// Ruta para crear preferencia de pago
 app.post('/create_preference', async (req, res) => {
   try {
     const { items, marketplace_fee, statement_descriptor } = req.body;
@@ -47,4 +47,5 @@ app.post('/create_preference', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor activo en el puerto ${PORT}`);
+  console.log('Servidor activo en el puerto ' + PORT);
+});
