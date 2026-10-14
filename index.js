@@ -19,36 +19,29 @@ app.get('/', (req, res) => {
 // Ruta para crear la preferencia de pago (con soporte para comisiones / split payment)
 app.post('/create_preference', async (req, res) => {
   try {
-    const { title, unit_price, quantity, marketplace_fee } = req.body;
+    const { items, marketplace_fee, statement_descriptor } = req.body;
 
-    let preference = {
-      items: [
-        {
-          title: title || 'Producto de SI!',
-          unit_price: Number(unit_price),
-          quantity: Number(quantity) || 1,
-        }
-      ],
-      // Comisión de la plataforma para esquemas de marketplace / split payment
+    const preference = {
+      items: items,
       marketplace_fee: marketplace_fee ? Number(marketplace_fee) : undefined,
+      statement_descriptor: statement_descriptor || 'SI!',
       back_urls: {
-        success: "https://www.success.com",
-        failure: "https://www.failure.com",
-        pending: "https://www.pending.com"
+        success: "https://www.tuapp.com/success",
+        failure: "https://www.tuapp.com/failure",
+        pending: "https://www.tuapp.com/pending"
       },
       auto_return: "approved",
     };
 
     const response = await mercadopago.preferences.create(preference);
-    
     res.status(200).json({
       id: response.body.id,
       init_point: response.body.init_point,
       sandbox_init_point: response.body.sandbox_init_point
     });
   } catch (error) {
-    console.error("Error al crear la preferencia de pago:", error);
-    res.status(500).json({ error: error.message || "Error al procesar el pago" });
+    console.error('Error al crear la preferencia:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
